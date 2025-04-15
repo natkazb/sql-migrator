@@ -1,20 +1,9 @@
 logger:
   level: "INFO"
-  fileName: "/tmp/calendar.log"
-storage:
-  type: "sql"
-  sql:
-    host: "localhost"
-    port: 5432
-    user: "user_cld"
-    password: "pass_cld"
-    dbName: "calendar"
-    driver: "postgres"
-http:
+sql:
   host: "localhost"
-  port: "8083"
-  timeout: "30s"
-grpc:
-  host: ""
-  port: "50051"
-  timeout: "30s"
+  port: 5433
+  user: "user_migrate"
+  password: "pass_migrate"
+  dbName: "test"
+  driver: "postgres"
