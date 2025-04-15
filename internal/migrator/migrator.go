@@ -7,14 +7,14 @@ import (
 )
 
 type Migrator struct {
-	Path   string
-	Db     *DB
+	Path string
+	Db   *DB
 }
 
 func NewMigrator(dsn, driver, path string) *Migrator {
 	return &Migrator{
-		Path:   path,
-		Db:     New(driver, dsn),
+		Path: path,
+		Db:   New(dsn, driver),
 	}
 }
 
@@ -22,6 +22,7 @@ func (m *Migrator) CreateMigration(name string) error {
 	err := m.Db.Init()
 	defer m.Db.Close()
 	if err != nil {
+		//fmt.Printf("%v", err)
 		return err
 	}
 	// Generate Go or SQL migration template

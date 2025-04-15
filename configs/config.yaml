@@ -7,3 +7,4 @@ sql:
   password: "pass_migrate"
   dbName: "test"
   driver: "postgres"
+path: "./migrations"

@@ -6,9 +6,9 @@ services:
     shm_size: 128mb
     volumes:
       - .:/docker-entrypoint-initdb.d
-      - calendar-data:/var/lib/postgresql/data
+      - migrator-data:/var/lib/postgresql/data
     ports:
-      - 5432:5433
+      - 5433:5432
     environment:
       POSTGRES_DB: "test"
       POSTGRES_USER: "user_migrate"
@@ -16,4 +16,4 @@ services:
       PGDATA: "/var/lib/postgresql/data/pgdata"
 
 volumes:
-  calendar-data:
+  migrator-data:
