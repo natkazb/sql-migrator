@@ -20,7 +20,6 @@ func Execute() {
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "Path to the configuration file")
 	rootCmd.AddCommand(createCmd, upCmd, downCmd, redoCmd, statusCmd, dbVersionCmd)
 
-	// Загрузка конфигурации
 	cobra.OnInitialize(loadConfig)
 
 	if err := rootCmd.Execute(); err != nil {
@@ -35,7 +34,13 @@ func loadConfig() {
 		os.Exit(1)
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Sql.Host, conf.Sql.Port, conf.Sql.Username, conf.Sql.Password, conf.Sql.DBName)
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		conf.Sql.Host,
+		conf.Sql.Port,
+		conf.Sql.Username,
+		conf.Sql.Password,
+		conf.Sql.DBName)
+
 	m = migrator.NewMigrator(dsn, conf.Sql.Driver, conf.Path)
 }
 

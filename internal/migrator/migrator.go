@@ -6,6 +6,18 @@ import (
 	"time"
 )
 
+const (
+	TEMPLATE = `-- Up begin
+-- SQL statements for applying the migration
+-- Up end
+
+-- Down begin
+-- SQL statements for rolling back the migration
+-- Down end
+`
+	FORMAT = "20060102150405"
+)
+
 type Migrator struct {
 	Path string
 	Db   *DB
@@ -22,28 +34,19 @@ func (m *Migrator) CreateMigration(name string) error {
 	err := m.Db.Init()
 	defer m.Db.Close()
 	if err != nil {
-		//fmt.Printf("%v", err)
 		return err
 	}
 	// Generate Go or SQL migration template
-	timestamp := time.Now().Format("20060102150405")
+	timestamp := time.Now().Format(FORMAT)
 	filename := fmt.Sprintf("%s_%s.sql", timestamp, name)
-	file, err := os.Create(fmt.Sprintf("migrations/%s", filename))
+	file, err := os.Create(fmt.Sprintf("%s/%s", m.Path, filename))
 	if err != nil {
 		fmt.Println("Error creating migration:", err)
 		return nil
 	}
 	defer file.Close()
 
-	template := `-- Up begin
--- SQL statements for applying the migration
--- Up end
-
--- Down begin
--- SQL statements for rolling back the migration
--- Down end
-`
-	file.WriteString(template)
+	file.WriteString(TEMPLATE)
 	fmt.Println("Migration created:", filename)
 	return nil
 }
