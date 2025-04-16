@@ -1,4 +1,4 @@
-package migrator
+package migration
 
 type Migrate interface {
     Parse(message string)

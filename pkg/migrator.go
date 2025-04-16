@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/natkazb/sql-migrator/internal/migration"
 )
 
 const (
@@ -20,13 +22,13 @@ const (
 
 type Migrator struct {
 	Path string
-	Db   *DB
+	Db   *migration.DB
 }
 
 func NewMigrator(dsn, driver, path string) *Migrator {
 	return &Migrator{
 		Path: path,
-		Db:   New(dsn, driver),
+		Db:   migration.New(dsn, driver),
 	}
 }
 

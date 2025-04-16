@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/natkazb/sql-migrator/internal/config"
-	"github.com/natkazb/sql-migrator/internal/migrator"
+	"github.com/natkazb/sql-migrator/pkg/migrator"
 	"github.com/spf13/cobra"
 )
 
