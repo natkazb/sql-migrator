@@ -5,11 +5,13 @@ import (
 	"os"
 
 	"github.com/natkazb/sql-migrator/internal/config"
-	"github.com/natkazb/sql-migrator/pkg/migrator"
+	"github.com/natkazb/sql-migrator/internal/logger"
+	"github.com/natkazb/sql-migrator/internal/migration"
 	"github.com/spf13/cobra"
 )
 
-var m *migrator.Migrator
+var m *migration.Migrator
+var l *logger.Logger
 var configFile string
 
 func Execute() {
@@ -18,12 +20,12 @@ func Execute() {
 		Short: "Database migration tool",
 	}
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "Path to the configuration file")
-	rootCmd.AddCommand(createCmd, upCmd, downCmd, redoCmd, statusCmd, dbVersionCmd)
+	rootCmd.AddCommand(createCmd, createCmdGo, upCmd, downCmd, redoCmd, statusCmd, dbVersionCmd)
 
 	cobra.OnInitialize(loadConfig)
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		l.Error(err.Error())
 	}
 }
 
@@ -41,18 +43,31 @@ func loadConfig() {
 		conf.Sql.Password,
 		conf.Sql.DBName)
 
-	m = migrator.NewMigrator(dsn, conf.Sql.Driver, conf.Path)
+	l = logger.New(conf.Logger.Level)
+	m = migration.New(dsn, conf.Sql.Driver, conf.Path, l)
 }
 
 var createCmd = &cobra.Command{
 	Use:   "create <name>",
-	Short: "Create a new migration",
+	Short: "Create a new migration by SQL format",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			fmt.Println("Migration name is required")
+			l.Error("Migration name is required")
 			return
 		}
-		m.CreateMigration(args[0])
+		m.CreateMigration(args[0], migration.FORMAT_SQL)
+	},
+}
+
+var createCmdGo = &cobra.Command{
+	Use:   "create-go <name>",
+	Short: "Create a new migration by GO format",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 1 {
+			l.Error("Migration name is required")
+			return
+		}
+		m.CreateMigration(args[0], migration.FORMAT_GO)
 	},
 }
 

@@ -1,4 +1,4 @@
-package migration
+package db_migr
 
 import (
 	"fmt"
@@ -8,30 +8,40 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type Logger interface {
+	Info(msg string)
+	Debug(msg string)
+	Warn(msg string)
+	Error(msg string)
+}
+
 const (
 	TABLE_NAME        = "migrations"
 	STATUS_PROCESSING = "process"
 	STATUS_DONE       = "done"
 	STATUS_ERROR      = "error"
+	NO_DATA           = "no any migration has been applied"
 )
 
-/*type Migrations struct {
+type Migration struct {
 	Id      int
 	Name    string
 	Status  string
-	Applied string
-} */
+	Applied time.Time `db:"applied_at"`
+}
 
 type DB struct {
 	Dsn    string
 	Driver string
 	db     *sqlx.DB
+	log    Logger
 }
 
-func New(dsn, driver string) *DB {
+func New(dsn, driver string, l Logger) *DB {
 	return &DB{
 		Dsn:    dsn,
 		Driver: driver,
+		log:    l,
 	}
 }
 
@@ -65,7 +75,7 @@ func (d *DB) CreateMigrationsTable() error {
 		applied_at TIMESTAMP
 	)`, TABLE_NAME)
 	_, err := d.db.Exec(query)
-	fmt.Println("Migrations table create") // @todo: log
+	d.log.Debug("Migrations table init")
 	return err
 }
 
@@ -103,7 +113,26 @@ func (d *DB) ProcessMigrate(name, query string) error {
 		time.Now(),
 	)
 	if errUpdt != nil {
-		//@todo: записать в лог, вывести пользователю
+		d.log.Error(errUpdt.Error())
 	}
 	return err
+}
+
+func (d *DB) ShowLast() (string, error) {
+	query := fmt.Sprintf(`
+	SELECT id, name, status, applied_at
+FROM %s
+WHERE status = $1 
+ORDER BY applied_at DESC
+LIMIT 1`, TABLE_NAME)
+	results := make([]Migration, 0)
+	err := d.db.Select(&results, query, STATUS_DONE)
+	if err != nil {
+		d.log.Error(err.Error())
+	}
+	resultInfo := NO_DATA
+	if len(results) > 0 {
+		resultInfo = fmt.Sprintf("ID=%d NAME=%s STATUS=%s APPLIED=%s", results[0].Id, results[0].Name, results[0].Status, results[0].Applied)
+	}
+	return resultInfo, err
 }
