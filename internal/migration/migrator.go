@@ -96,10 +96,17 @@ func (m *Migrator) RedoMigration() {
 	// Implementation here
 }
 
-func (m *Migrator) ShowStatus() {
-	// Show the status of all migrations
-	fmt.Println("Migration status:")
-	// Implementation here
+func (m *Migrator) ShowStatus(limit int) {
+	err := m.DB.Init()
+	defer m.DB.Close()
+	if err != nil {
+		m.log.Error(err.Error())
+	}
+	info, err := m.DB.ShowStatus(limit)
+	if err != nil {
+		m.log.Error(err.Error())
+	}
+	m.log.Info(fmt.Sprintf("Status: %s", info))
 }
 
 func (m *Migrator) ShowDBVersion() {

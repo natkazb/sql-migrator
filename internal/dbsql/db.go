@@ -18,9 +18,11 @@ type Logger interface {
 const (
 	tableName        = "migrations"
 	statusProcessing = "process"
-	srarusDone       = "done"
+	statusDone       = "done"
 	statusError      = "error"
 	noData           = "no any migration has been applied"
+	noDataStatus     = "migration table is empty"
+	limitStatus      = 5
 )
 
 type Migration struct {
@@ -98,7 +100,7 @@ func (d *DB) ProcessMigrate(name, query string) error {
 
 	// попробуем выполнить саму миграцию
 	_, err = d.db.Exec(query)
-	status := srarusDone
+	status := statusDone
 	if err != nil {
 		status = statusError
 	}
@@ -118,6 +120,7 @@ func (d *DB) ProcessMigrate(name, query string) error {
 	return err
 }
 
+// последняя примененная (statusDone) запись в таблице миграций (tableName)
 func (d *DB) ShowLast() (string, error) {
 	query := fmt.Sprintf(`
 	SELECT id, name, status, applied_at
@@ -126,7 +129,7 @@ WHERE status = $1
 ORDER BY applied_at DESC
 LIMIT 1`, tableName)
 	results := make([]Migration, 0)
-	err := d.db.Select(&results, query, srarusDone)
+	err := d.db.Select(&results, query, statusDone)
 	if err != nil {
 		d.log.Error(err.Error())
 	}
@@ -137,6 +140,27 @@ LIMIT 1`, tableName)
 			results[0].Name,
 			results[0].Status,
 			results[0].Applied)
+	}
+	return resultInfo, err
+}
+
+func (d *DB) ShowStatus(limit int) (string, error) {
+	if limit == 0 {
+		limit = limitStatus
+	}
+	query := fmt.Sprintf(`
+	SELECT id, name, status, applied_at
+FROM %s
+ORDER BY applied_at DESC
+LIMIT %d`, tableName, limit)
+	results := make([]Migration, limit)
+	err := d.db.Select(&results, query)
+	if err != nil {
+		d.log.Error(err.Error())
+	}
+	resultInfo := noDataStatus
+	if len(results) > 0 {
+		resultInfo = fmt.Sprintf("%v", results)
 	}
 	return resultInfo, err
 }

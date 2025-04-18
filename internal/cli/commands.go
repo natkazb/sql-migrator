@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/natkazb/sql-migrator/internal/config"    //nolint:depguard
 	"github.com/natkazb/sql-migrator/internal/logger"    //nolint:depguard
@@ -98,10 +99,19 @@ var redoCmd = &cobra.Command{
 }
 
 var statusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Show migration status",
-	Run: func(_ *cobra.Command, _ []string) {
-		m.ShowStatus()
+	Use:   "status <limit>",
+	Short: "Show migration status (<limit> integer, no required)",
+	Run: func(_ *cobra.Command, args []string) {
+		limit := 0
+		if len(args) > 0 {
+				parsedLimit, err := strconv.Atoi(args[0])
+				if err != nil {
+						l.Error(fmt.Sprintf("Error parsing '%s' to int: %v\n", args[0], err))
+						return
+				}
+				limit = parsedLimit
+		}
+		m.ShowStatus(limit)
 	},
 }
 

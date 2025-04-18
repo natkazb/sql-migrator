@@ -7,4 +7,10 @@
 `go run ./cmd/gomigrator --config=./configs/config.yaml`
 
 ### Создать миграцию (CREATE)
-`go run ./cmd/gomigrator --config=./configs/config.yaml create name`
+`go run ./cmd/gomigrator --config=./configs/config.yaml create <name>`
+
+### Вывод версии базы (DBVERSION)
+`go run ./cmd/gomigrator --config=./configs/config.yaml dbversion`
+
+### Вывод статуса миграций (STATUS)
+`go run ./cmd/gomigrator --config=./configs/config.yaml status <limit>`
