@@ -81,9 +81,12 @@ func (d *DB) CreateMigrationsTable() error {
 	return err
 }
 
+// Выполнить миграцию
 func (d *DB) ProcessMigrate(name, query string) error {
 	// добавим новую запись в таблицу миграций
 	var id int
+	// @todo: UPSERT
+	// @todo: проверка на дубликат по name
 	err := d.db.QueryRow(fmt.Sprintf(`
 	INSERT INTO %s 
 	(name, status, applied_at) 
@@ -144,6 +147,7 @@ LIMIT 1`, tableName)
 	return resultInfo, err
 }
 
+// вывод последних limit записей из tableName
 func (d *DB) ShowStatus(limit int) (string, error) {
 	if limit == 0 {
 		limit = limitStatus
@@ -163,4 +167,27 @@ LIMIT %d`, tableName, limit)
 		resultInfo = fmt.Sprintf("%v", results)
 	}
 	return resultInfo, err
+}
+
+func (d *DB) GetListDone() ([]string, error) {
+	return d.getList(statusDone)
+}
+
+func (d *DB) GetListError() ([]string, error) {
+	return d.getList(statusError)
+}
+
+func (d *DB) getList(status string) ([]string, error) {
+	// @todo: limit, offset
+	query := fmt.Sprintf(`
+	SELECT name
+FROM %s
+WHERE status = $1 
+ORDER BY applied_at ASC`, tableName)
+	results := make([]string, 0)
+	err := d.db.Select(&results, query, status)
+	if err != nil {
+		d.log.Error(err.Error())
+	}
+	return results, err
 }
