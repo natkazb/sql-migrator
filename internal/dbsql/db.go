@@ -81,7 +81,7 @@ func (d *DB) CreateMigrationsTable() error {
 	return err
 }
 
-// Выполнить миграцию
+// Выполнить миграцию.
 func (d *DB) ProcessMigrate(name, query string) error {
 	// добавим новую запись в таблицу миграций
 	var id int
@@ -123,7 +123,7 @@ func (d *DB) ProcessMigrate(name, query string) error {
 	return err
 }
 
-// последняя примененная (statusDone) запись в таблице миграций (tableName)
+// последняя примененная (statusDone) запись в таблице миграций (tableName).
 func (d *DB) ShowLast() (string, error) {
 	query := fmt.Sprintf(`
 	SELECT id, name, status, applied_at
@@ -147,7 +147,7 @@ LIMIT 1`, tableName)
 	return resultInfo, err
 }
 
-// вывод последних limit записей из tableName
+// вывод последних limit записей из tableName.
 func (d *DB) ShowStatus(limit int) (string, error) {
 	if limit == 0 {
 		limit = limitStatus

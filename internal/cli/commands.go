@@ -104,12 +104,12 @@ var statusCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		limit := 0
 		if len(args) > 0 {
-				parsedLimit, err := strconv.Atoi(args[0])
-				if err != nil {
-						l.Error(fmt.Sprintf("Error parsing '%s' to int: %v\n", args[0], err))
-						return
-				}
-				limit = parsedLimit
+			parsedLimit, err := strconv.Atoi(args[0])
+			if err != nil {
+				l.Error(fmt.Sprintf("Error parsing '%s' to int: %v\n", args[0], err))
+				return
+			}
+			limit = parsedLimit
 		}
 		m.ShowStatus(limit)
 	},

@@ -26,8 +26,7 @@ func New(path string, l Logger) *MigrationPath {
 }
 
 func (m *MigrationPath) GetList() ([]string, error) {
-	var files []string
-	files = make([]string, 0) //@todo: можно предварительно посчитать кол-во файлов в директории
+	files := make([]string, 0) // @todo: можно предварительно посчитать кол-во файлов в директории
 
 	entries, err := os.ReadDir(m.Path)
 	if err != nil {
