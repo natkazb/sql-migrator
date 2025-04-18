@@ -20,6 +20,7 @@ linters-settings:
           - github.com/lib/pq
           - github.com/pkg/errors
           - gopkg.in/yaml.v3
+          - github.com/spf13/cobra
       Test:
         files:
           - $test

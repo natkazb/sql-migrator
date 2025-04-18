@@ -1,15 +1,15 @@
 package migration
 
 type Migrate interface {
-    Parse(message string)
+	Parse(_ string)
 }
 
 type GoMigrate struct{}
 
-func (m *GoMigrate) Parse(message string) {
+func (m *GoMigrate) Parse(_ string) {
 }
 
-type SqlMigrate struct{}
+type SQLMigrate struct{}
 
-func (m *SqlMigrate) Parse(message string) {
+func (m *SQLMigrate) Parse(_ string) {
 }

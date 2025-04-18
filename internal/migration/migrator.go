@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/natkazb/sql-migrator/internal/db_migr"
+	"github.com/natkazb/sql-migrator/internal/dbsql" //nolint:depguard
 )
 
 type Logger interface {
@@ -16,7 +16,7 @@ type Logger interface {
 }
 
 const (
-	TEMPLATE = `--SQL
+	template = `--SQL
 -- Up begin
 -- SQL statements for applying the migration
 -- Up end
@@ -25,7 +25,7 @@ const (
 -- SQL statements for rolling back the migration
 -- Down end
 `
-	TEMPLATE_GO = `--GO
+	templateGo = `--GO
 -- Up begin
 -- GO
 -- Up end
@@ -34,32 +34,32 @@ const (
 -- GO
 -- Down end
 `
-	FORMAT     = "20060102150405"
-	FORMAT_SQL = "SQL"
-	FORMAT_GO  = "GO"
+	format    = "20060102150405"
+	FormatSQL = "SQL"
+	FormatGO  = "GO"
 )
 
 type Migrator struct {
 	Path string
-	Db   *db_migr.DB
+	DB   *dbsql.DB
 	log  Logger
 }
 
 func New(dsn, driver, path string, l Logger) *Migrator {
 	return &Migrator{
 		Path: path,
-		Db:   db_migr.New(dsn, driver, l),
+		DB:   dbsql.New(dsn, driver, l),
 		log:  l,
 	}
 }
 
 func (m *Migrator) CreateMigration(name, format string) {
-	err := m.Db.Init()
-	defer m.Db.Close()
+	err := m.DB.Init()
+	defer m.DB.Close()
 	if err != nil {
 		m.log.Error(err.Error())
 	}
-	timestamp := time.Now().Format(FORMAT)
+	timestamp := time.Now().Format(format)
 	filename := fmt.Sprintf("%s_%s.sql", timestamp, name)
 	file, err := os.Create(fmt.Sprintf("%s/%s", m.Path, filename))
 	if err != nil {
@@ -67,9 +67,9 @@ func (m *Migrator) CreateMigration(name, format string) {
 	}
 	defer file.Close()
 
-	template := TEMPLATE
-	if format == FORMAT_GO {
-		template = TEMPLATE_GO
+	template := template
+	if format == FormatGO {
+		template = templateGo
 	}
 	_, err = file.WriteString(template)
 	if err != nil {
@@ -103,13 +103,13 @@ func (m *Migrator) ShowStatus() {
 }
 
 func (m *Migrator) ShowDBVersion() {
-	err := m.Db.Init()
-	defer m.Db.Close()
+	err := m.DB.Init()
+	defer m.DB.Close()
 	if err != nil {
 		m.log.Error(err.Error())
 	}
 	// номер последней примененной миграции
-	info, err := m.Db.ShowLast()
+	info, err := m.DB.ShowLast()
 	if err != nil {
 		m.log.Error(err.Error())
 	}

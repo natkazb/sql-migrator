@@ -4,18 +4,20 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/natkazb/sql-migrator/internal/config"
-	"github.com/natkazb/sql-migrator/internal/logger"
-	"github.com/natkazb/sql-migrator/internal/migration"
+	"github.com/natkazb/sql-migrator/internal/config"    //nolint:depguard
+	"github.com/natkazb/sql-migrator/internal/logger"    //nolint:depguard
+	"github.com/natkazb/sql-migrator/internal/migration" //nolint:depguard
 	"github.com/spf13/cobra"
 )
 
-var m *migration.Migrator
-var l *logger.Logger
-var configFile string
+var (
+	m          *migration.Migrator
+	l          *logger.Logger
+	configFile string
+)
 
 func Execute() {
-	var rootCmd = &cobra.Command{
+	rootCmd := &cobra.Command{
 		Use:   "gomigrator",
 		Short: "Database migration tool",
 	}
@@ -37,44 +39,44 @@ func loadConfig() {
 	}
 
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		conf.Sql.Host,
-		conf.Sql.Port,
-		conf.Sql.Username,
-		conf.Sql.Password,
-		conf.Sql.DBName)
+		conf.SQL.Host,
+		conf.SQL.Port,
+		conf.SQL.Username,
+		conf.SQL.Password,
+		conf.SQL.DBName)
 
 	l = logger.New(conf.Logger.Level)
-	m = migration.New(dsn, conf.Sql.Driver, conf.Path, l)
+	m = migration.New(dsn, conf.SQL.Driver, conf.Path, l)
 }
 
 var createCmd = &cobra.Command{
 	Use:   "create <name>",
 	Short: "Create a new migration by SQL format",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if len(args) < 1 {
 			l.Error("Migration name is required")
 			return
 		}
-		m.CreateMigration(args[0], migration.FORMAT_SQL)
+		m.CreateMigration(args[0], migration.FormatSQL)
 	},
 }
 
 var createCmdGo = &cobra.Command{
 	Use:   "create-go <name>",
 	Short: "Create a new migration by GO format",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if len(args) < 1 {
 			l.Error("Migration name is required")
 			return
 		}
-		m.CreateMigration(args[0], migration.FORMAT_GO)
+		m.CreateMigration(args[0], migration.FormatGO)
 	},
 }
 
 var upCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Apply all migrations",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		m.ApplyMigrations()
 	},
 }
@@ -82,7 +84,7 @@ var upCmd = &cobra.Command{
 var downCmd = &cobra.Command{
 	Use:   "down",
 	Short: "Rollback the last migration",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		m.RollbackMigration()
 	},
 }
@@ -90,7 +92,7 @@ var downCmd = &cobra.Command{
 var redoCmd = &cobra.Command{
 	Use:   "redo",
 	Short: "Redo the last migration",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		m.RedoMigration()
 	},
 }
@@ -98,7 +100,7 @@ var redoCmd = &cobra.Command{
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show migration status",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		m.ShowStatus()
 	},
 }
@@ -106,7 +108,7 @@ var statusCmd = &cobra.Command{
 var dbVersionCmd = &cobra.Command{
 	Use:   "dbversion",
 	Short: "Show the current database version",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		m.ShowDBVersion()
 	},
 }

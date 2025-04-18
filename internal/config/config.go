@@ -9,14 +9,13 @@ import (
 
 type Config struct {
 	Logger LoggerConf `yaml:"logger"`
-	Sql    SQLConf    `yaml:"sql"`
-	Path string `yaml:"path"`
+	SQL    SQLConf    `yaml:"sql"`
+	Path   string     `yaml:"path"`
 }
 
 type LoggerConf struct {
 	Level string `yaml:"level"`
 }
-
 
 type SQLConf struct {
 	Host     string `yaml:"host"`

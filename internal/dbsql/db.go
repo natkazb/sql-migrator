@@ -1,11 +1,11 @@
-package db_migr
+package dbsql
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // Importing the PostgreSQL driver for its side effects
 )
 
 type Logger interface {
@@ -16,15 +16,15 @@ type Logger interface {
 }
 
 const (
-	TABLE_NAME        = "migrations"
-	STATUS_PROCESSING = "process"
-	STATUS_DONE       = "done"
-	STATUS_ERROR      = "error"
-	NO_DATA           = "no any migration has been applied"
+	tableName        = "migrations"
+	statusProcessing = "process"
+	srarusDone       = "done"
+	statusError      = "error"
+	noData           = "no any migration has been applied"
 )
 
 type Migration struct {
-	Id      int
+	ID      int
 	Name    string
 	Status  string
 	Applied time.Time `db:"applied_at"`
@@ -73,7 +73,7 @@ func (d *DB) CreateMigrationsTable() error {
 		name TEXT NOT NULL,
 		status VARCHAR(15) NOT NULL,
 		applied_at TIMESTAMP
-	)`, TABLE_NAME)
+	)`, tableName)
 	_, err := d.db.Exec(query)
 	d.log.Debug("Migrations table init")
 	return err
@@ -87,9 +87,9 @@ func (d *DB) ProcessMigrate(name, query string) error {
 	(name, status, applied_at) 
 	VALUES ($1, $2, $3)
 	RETURNING id
-	`, TABLE_NAME),
+	`, tableName),
 		name,
-		STATUS_PROCESSING,
+		statusProcessing,
 		time.Now(),
 	).Scan(&id)
 	if err != nil {
@@ -98,16 +98,16 @@ func (d *DB) ProcessMigrate(name, query string) error {
 
 	// попробуем выполнить саму миграцию
 	_, err = d.db.Exec(query)
-	status := STATUS_DONE
+	status := srarusDone
 	if err != nil {
-		status = STATUS_ERROR
+		status = statusError
 	}
 	_, errUpdt := d.db.Exec(fmt.Sprintf(`
 	UPDATE %s SET 
 	status = $2
 	applied_at = $3
 	WHERE id = $1
-	`, TABLE_NAME),
+	`, tableName),
 		id,
 		status,
 		time.Now(),
@@ -124,15 +124,19 @@ func (d *DB) ShowLast() (string, error) {
 FROM %s
 WHERE status = $1 
 ORDER BY applied_at DESC
-LIMIT 1`, TABLE_NAME)
+LIMIT 1`, tableName)
 	results := make([]Migration, 0)
-	err := d.db.Select(&results, query, STATUS_DONE)
+	err := d.db.Select(&results, query, srarusDone)
 	if err != nil {
 		d.log.Error(err.Error())
 	}
-	resultInfo := NO_DATA
+	resultInfo := noData
 	if len(results) > 0 {
-		resultInfo = fmt.Sprintf("ID=%d NAME=%s STATUS=%s APPLIED=%s", results[0].Id, results[0].Name, results[0].Status, results[0].Applied)
+		resultInfo = fmt.Sprintf("ID=%d NAME=%s STATUS=%s APPLIED=%s",
+			results[0].ID,
+			results[0].Name,
+			results[0].Status,
+			results[0].Applied)
 	}
 	return resultInfo, err
 }
