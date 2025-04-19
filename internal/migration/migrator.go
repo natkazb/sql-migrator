@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/natkazb/sql-migrator/internal/dbsql" //nolint:depguard
@@ -18,27 +19,7 @@ type Logger interface {
 }
 
 const (
-	template = `--SQL
--- Up begin
--- SQL statements for applying the migration
--- Up end
-
--- Down begin
--- SQL statements for rolling back the migration
--- Down end
-`
-	templateGo = `--GO
--- Up begin
--- GO
--- Up end
-
--- Down begin
--- GO
--- Down end
-`
-	format    = "20060102150405"
-	FormatSQL = "SQL"
-	FormatGO  = "GO"
+	formatTime = "20060102150405"
 )
 
 type Migrator struct {
@@ -61,7 +42,7 @@ func (m *Migrator) CreateMigration(name, format string) {
 	if err != nil {
 		m.log.Error(err.Error())
 	}
-	timestamp := time.Now().Format(format)
+	timestamp := time.Now().Format(formatTime)
 	filename := fmt.Sprintf("%s_%s.sql", timestamp, name)
 	file, err := os.Create(fmt.Sprintf("%s/%s", m.Mpath.Path, filename))
 	if err != nil {
@@ -82,42 +63,37 @@ func (m *Migrator) CreateMigration(name, format string) {
 
 func (m *Migrator) ApplyMigrations() {
 	m.log.Info("START APPLY")
+	defer m.log.Info("FINISH APPLY")
 	err := m.DB.Init()
 	defer m.DB.Close()
 	if err != nil {
 		m.log.Error(err.Error())
+		return
 	}
 	files, err := m.Mpath.GetList()
 	if err != nil {
 		m.log.Error(err.Error())
+		return
 	}
-	migrationsDone, err := m.DB.GetListDone()
+	migrationsDB, err := m.DB.GetList()
 	if err != nil {
 		m.log.Error(err.Error())
-	}
-	migrationsError, err := m.DB.GetListError()
-	if err != nil {
-		m.log.Error(err.Error())
+		return
 	}
 
-	// Apply each migration file
+	// @todo: что делать с записями в бд, которых нет среди списка файлов?
+
 	for _, file := range files {
-		// Check if migration is already applied
-		if stringInSlice(file, migrationsDone) {
+		if slices.Contains(migrationsDB, file) {
 			m.log.Info("Skipping already applied migration: " + file)
 			continue
 		}
-		if stringInSlice(file, migrationsError) {
-			// @todo: выполнить миграцию, обновить статус в бд
-			continue
-		}
-		// @todo: что делать с записями в бд, которых нет среди списка файлов?
 
-		// это новая миграция, выполняем, делаем новую запись в бд
 		filePath := filepath.Join(m.Mpath.Path, file)
 		content, err := os.ReadFile(filePath)
 		if err != nil {
-			m.log.Error("Failed to read migration file: " + err.Error())
+			m.log.Error(fmt.Sprintf("Failed to read migration file %s: %s", file, err.Error()))
+			break
 		}
 
 		// Execute migration
@@ -125,19 +101,10 @@ func (m *Migrator) ApplyMigrations() {
 		if err == nil {
 			m.log.Info("Successfully applied migration: " + file)
 		} else {
-			m.log.Error("Failed to apply migration: " + err.Error())
+			m.log.Error(fmt.Sprintf("Failed to apply migration file %s: %s", file, err.Error()))
+			break
 		}
 	}
-	m.log.Info("FINISH APPLY")
-}
-
-func stringInSlice(str string, list []string) bool {
-	for _, v := range list {
-		if v == str {
-			return true
-		}
-	}
-	return false
 }
 
 func (m *Migrator) RollbackMigration() {

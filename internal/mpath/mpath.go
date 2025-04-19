@@ -1,7 +1,10 @@
 package mpath
 
 import (
+	"fmt"
 	"os"
+	"sort"
+	"time"
 )
 
 type Logger interface {
@@ -16,7 +19,10 @@ type MigrationPath struct {
 	log  Logger
 }
 
-type MigrationFiles []string
+type FileInfo struct {
+	Name    string
+	ModTime time.Time
+}
 
 func New(path string, l Logger) *MigrationPath {
 	return &MigrationPath{
@@ -26,19 +32,37 @@ func New(path string, l Logger) *MigrationPath {
 }
 
 func (m *MigrationPath) GetList() ([]string, error) {
-	files := make([]string, 0) // @todo: можно предварительно посчитать кол-во файлов в директории
-
+	files := make([]string, 0)
 	entries, err := os.ReadDir(m.Path)
 	if err != nil {
 		m.log.Error("Failed to read directory: " + err.Error())
 		return files, err
 	}
 
+	// Collect file info with modification times
+	fileInfos := make([]FileInfo, 0)
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
-		files = append(files, entry.Name())
+		info, err := entry.Info()
+		if err != nil {
+			fmt.Println("Error getting file info:", err)
+			continue
+		}
+		fileInfos = append(fileInfos, FileInfo{
+			Name:    entry.Name(),
+			ModTime: info.ModTime(),
+		})
+	}
+
+	// Sort files by modification time
+	sort.Slice(fileInfos, func(i, j int) bool {
+		return fileInfos[i].ModTime.Before(fileInfos[j].ModTime)
+	})
+
+	for _, fileInfo := range fileInfos {
+		files = append(files, fileInfo.Name)
 	}
 
 	return files, nil

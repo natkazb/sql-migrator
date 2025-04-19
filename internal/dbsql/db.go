@@ -17,12 +17,11 @@ type Logger interface {
 
 const (
 	tableName        = "migrations"
-	statusProcessing = "process"
-	statusDone       = "done"
-	statusError      = "error"
 	noData           = "no any migration has been applied"
 	noDataStatus     = "migration table is empty"
 	limitStatus      = 5
+	StatusProcessing = "process"
+	StatusDone       = "done"
 )
 
 type Migration struct {
@@ -72,7 +71,7 @@ func (d *DB) CreateMigrationsTable() error {
 	query := fmt.Sprintf(`
 	CREATE TABLE IF NOT EXISTS %s (
 		id SERIAL PRIMARY KEY,
-		name TEXT NOT NULL,
+		name VARCHAR(200) NOT NULL UNIQUE,
 		status VARCHAR(15) NOT NULL,
 		applied_at TIMESTAMP
 	)`, tableName)
@@ -83,44 +82,69 @@ func (d *DB) CreateMigrationsTable() error {
 
 // Выполнить миграцию.
 func (d *DB) ProcessMigrate(name, query string) error {
+	tx, err := d.db.Beginx()
+	if err != nil {
+		d.log.Debug("Failed to start transaction: " + err.Error())
+		return err
+	}
 	// добавим новую запись в таблицу миграций
 	var id int
-	// @todo: UPSERT
-	// @todo: проверка на дубликат по name
-	err := d.db.QueryRow(fmt.Sprintf(`
+	err = tx.QueryRow(fmt.Sprintf(`
 	INSERT INTO %s 
 	(name, status, applied_at) 
 	VALUES ($1, $2, $3)
 	RETURNING id
 	`, tableName),
 		name,
-		statusProcessing,
+		StatusProcessing,
 		time.Now(),
 	).Scan(&id)
 	if err != nil {
+		errTx := tx.Rollback()
+		if errTx != nil {
+			d.log.Debug("Failed to rollback transaction: " + errTx.Error())
+		}
+		d.log.Debug("Failed insert into migrations table: " + err.Error())
 		return err
 	}
 
 	// попробуем выполнить саму миграцию
-	_, err = d.db.Exec(query)
-	status := statusDone
+	_, err = tx.Exec(query)
 	if err != nil {
-		status = statusError
+		errTx := tx.Rollback()
+		if errTx != nil {
+			d.log.Debug("Failed to rollback transaction: " + errTx.Error())
+		}
+		d.log.Error(fmt.Sprintf("Failed execute: '%s' : %s", query, err.Error()))
+		return err
 	}
-	_, errUpdt := d.db.Exec(fmt.Sprintf(`
+
+	_, err = tx.Exec(fmt.Sprintf(`
 	UPDATE %s SET 
-	status = $2
+	status = $2,
 	applied_at = $3
 	WHERE id = $1
 	`, tableName),
 		id,
-		status,
+		StatusDone,
 		time.Now(),
 	)
-	if errUpdt != nil {
-		d.log.Error(errUpdt.Error())
+	if err != nil {
+		errTx := tx.Rollback()
+		if errTx != nil {
+			d.log.Debug("Failed to rollback transaction: " + errTx.Error())
+		}
+		d.log.Debug("Failed update migrations table: " + err.Error())
+		return err
 	}
-	return err
+
+	err = tx.Commit()
+	if err != nil {
+		d.log.Error("Failed to commit transaction: " + err.Error())
+		return err
+	}
+
+	return nil
 }
 
 // последняя примененная (statusDone) запись в таблице миграций (tableName).
@@ -132,7 +156,7 @@ WHERE status = $1
 ORDER BY applied_at DESC
 LIMIT 1`, tableName)
 	results := make([]Migration, 0)
-	err := d.db.Select(&results, query, statusDone)
+	err := d.db.Select(&results, query, StatusDone)
 	if err != nil {
 		d.log.Error(err.Error())
 	}
@@ -169,23 +193,14 @@ LIMIT %d`, tableName, limit)
 	return resultInfo, err
 }
 
-func (d *DB) GetListDone() ([]string, error) {
-	return d.getList(statusDone)
-}
-
-func (d *DB) GetListError() ([]string, error) {
-	return d.getList(statusError)
-}
-
-func (d *DB) getList(status string) ([]string, error) {
+func (d *DB) GetList() ([]string, error) {
 	// @todo: limit, offset
 	query := fmt.Sprintf(`
 	SELECT name
 FROM %s
-WHERE status = $1 
 ORDER BY applied_at ASC`, tableName)
 	results := make([]string, 0)
-	err := d.db.Select(&results, query, status)
+	err := d.db.Select(&results, query)
 	if err != nil {
 		d.log.Error(err.Error())
 	}

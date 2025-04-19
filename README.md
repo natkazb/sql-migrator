@@ -9,6 +9,9 @@
 ### Создать миграцию (CREATE)
 `go run ./cmd/gomigrator --config=./configs/config.yaml create <name>`
 
+### Применение всех миграций (UP)
+`go run ./cmd/gomigrator --config=./configs/config.yaml up`
+
 ### Вывод версии базы (DBVERSION)
 `go run ./cmd/gomigrator --config=./configs/config.yaml dbversion`
 
