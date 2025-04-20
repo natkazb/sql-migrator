@@ -1,8 +1,5 @@
 run:
   tests: true
-  build-tags:
-    - bench
-    - !bench
 
 linters-settings:
   funlen:
@@ -41,14 +38,13 @@ linters:
   disable-all: true
   enable:
     - asciicheck
+    - bodyclose
     - depguard
     - dogsled
     - dupl
-    - bodyclose
     - durationcheck
     - errorlint
     - exhaustive
-    - copyloopvar
     - funlen
     - gci
     - gocognit
@@ -59,6 +55,8 @@ linters:
     - gofmt
     - gofumpt
     - goheader
+    - gomoddirectives
+    - gomodguard
     - goprintffuncname
     - gosec
     - gosimple
@@ -75,12 +73,16 @@ linters:
     - prealloc
     - predeclared
     - revive
+    - rowserrcheck
+    - sqlclosecheck
     - staticcheck
     - stylecheck
     - tagliatelle
     - thelper
+    - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
+    - wastedassign
     - whitespace

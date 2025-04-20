@@ -1,4 +1,6 @@
 #### SQL Мигратор
+![Build Status](https://github.com/natkazb/sql-migrator/actions/workflows/go.yml/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/natkazb/sql-migrator)](https://goreportcard.com/report/github.com/natkazb/
 
 Как запускать: 
 1) бд можно запустить с помощью docker compose
