@@ -44,6 +44,7 @@ func (m *Migrator) CreateMigration(name, format string) {
 	}
 	timestamp := time.Now().Format(formatTime)
 	filename := fmt.Sprintf("%s_%s.sql", timestamp, name)
+	m.log.Info(filename)
 	file, err := os.Create(fmt.Sprintf("%s/%s", m.Mpath.Path, filename))
 	if err != nil {
 		m.log.Error(fmt.Sprintf("Error creating file: %s/%s : %s", m.Mpath.Path, filename, err.Error()))
@@ -83,6 +84,7 @@ func (m *Migrator) ApplyMigrations() {
 
 	// @todo: что делать с записями в бд, которых нет среди списка файлов?
 
+	parser := &BaseParser{}
 	for _, file := range files {
 		if slices.Contains(migrationsDB, file) {
 			m.log.Info("Skipping already applied migration: " + file)
@@ -96,8 +98,14 @@ func (m *Migrator) ApplyMigrations() {
 			break
 		}
 
+		// Parse migration file
+		currMigr, err := parser.Parse(string(content))
+		if err != nil {
+			m.log.Error(fmt.Sprintf("Failed to parse migration file %s: %s", file, err.Error()))
+			break
+		}
 		// Execute migration
-		err = m.DB.ProcessMigrate(file, string(content))
+		err = m.DB.ProcessMigrate(file, currMigr.Up)
 		if err == nil {
 			m.log.Info("Successfully applied migration: " + file)
 		} else {
