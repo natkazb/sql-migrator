@@ -6,18 +6,40 @@
 
 Как запускать: 
 1) бд можно запустить с помощью docker compose
-`docker compose -f deployments/docker-compose.yaml up`
+```
+docker compose -f deployments/docker-compose.yaml up
+```
 2) запустить саму утилиту с конфигурацией подключения к БД
-`go run ./cmd/gomigrator --config=./configs/config.yaml`
+```
+go run ./cmd/gomigrator --config=./configs/config.yaml
+```
 
 ### Создать миграцию (CREATE)
-`go run ./cmd/gomigrator --config=./configs/config.yaml create <name>`
+```
+go run ./cmd/gomigrator --config=./configs/config.yaml create <name>
+```
 
 ### Применение всех миграций (UP)
-`go run ./cmd/gomigrator --config=./configs/config.yaml up`
+```
+go run ./cmd/gomigrator --config=./configs/config.yaml up
+```
+
+### Откат последней миграции (DOWN)
+```
+go run ./cmd/gomigrator --config=./configs/config.yaml down
+```
+
+### Повтор последней миграции (откат + накат) (REDO)
+```
+go run ./cmd/gomigrator --config=./configs/config.yaml redo
+```
 
 ### Вывод версии базы (DBVERSION)
-`go run ./cmd/gomigrator --config=./configs/config.yaml dbversion`
+```
+go run ./cmd/gomigrator --config=./configs/config.yaml dbversion
+```
 
 ### Вывод статуса миграций (STATUS)
-`go run ./cmd/gomigrator --config=./configs/config.yaml status <limit>`
+```
+go run ./cmd/gomigrator --config=./configs/config.yaml status <limit>
+```

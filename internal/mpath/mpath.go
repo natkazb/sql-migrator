@@ -3,6 +3,7 @@ package mpath
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"time"
 )
@@ -13,6 +14,29 @@ type Logger interface {
 	Warn(msg string)
 	Error(msg string)
 }
+
+const (
+	formatTime = "20060102150405"
+	template   = `-- SQL
+-- Up begin
+-- SQL statements for applying the migration
+-- Up end
+
+-- Down begin
+-- SQL statements for rolling back the migration
+-- Down end
+`
+	templateGo = `-- GO
+-- Up begin
+-- GO statements
+-- Up end
+
+-- Down begin
+-- GO statements
+-- Down end
+`
+	FormatGO = "GO"
+)
 
 type MigrationPath struct {
 	Path string
@@ -29,6 +53,27 @@ func New(path string, l Logger) *MigrationPath {
 		Path: path,
 		log:  l,
 	}
+}
+
+func (m *MigrationPath) CreateNew(name, format string) {
+	timestamp := time.Now().Format(formatTime)
+	filename := fmt.Sprintf("%s_%s.sql", timestamp, name)
+	filePath := filepath.Join(m.Path, filename)
+	file, err := os.Create(filePath)
+	if err != nil {
+		m.log.Error(fmt.Sprintf("Error creating file: %s : %s", filePath, err.Error()))
+	}
+	defer file.Close()
+
+	template := template
+	if format == FormatGO {
+		template = templateGo
+	}
+	_, err = file.WriteString(template)
+	if err != nil {
+		m.log.Error(fmt.Sprintf("Error writing file: %s : %s", filePath, err.Error()))
+	}
+	m.log.Info(fmt.Sprintf("Migration created in %s", filePath))
 }
 
 func (m *MigrationPath) GetList() ([]string, error) {

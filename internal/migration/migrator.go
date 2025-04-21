@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"time"
 
 	"github.com/natkazb/sql-migrator/internal/dbsql" //nolint:depguard
 	"github.com/natkazb/sql-migrator/internal/mpath" //nolint:depguard
@@ -17,10 +16,6 @@ type Logger interface {
 	Warn(msg string)
 	Error(msg string)
 }
-
-const (
-	formatTime = "20060102150405"
-)
 
 type Migrator struct {
 	DB    *dbsql.DB
@@ -37,29 +32,7 @@ func New(dsn, driver, path string, l Logger) *Migrator {
 }
 
 func (m *Migrator) CreateMigration(name, format string) {
-	err := m.DB.Init()
-	defer m.DB.Close()
-	if err != nil {
-		m.log.Error(err.Error())
-	}
-	timestamp := time.Now().Format(formatTime)
-	filename := fmt.Sprintf("%s_%s.sql", timestamp, name)
-	m.log.Info(filename)
-	file, err := os.Create(fmt.Sprintf("%s/%s", m.Mpath.Path, filename))
-	if err != nil {
-		m.log.Error(fmt.Sprintf("Error creating file: %s/%s : %s", m.Mpath.Path, filename, err.Error()))
-	}
-	defer file.Close()
-
-	template := template
-	if format == FormatGO {
-		template = templateGo
-	}
-	_, err = file.WriteString(template)
-	if err != nil {
-		m.log.Error(fmt.Sprintf("Error writing file: %s/%s : %s", m.Mpath.Path, filename, err.Error()))
-	}
-	m.log.Info(fmt.Sprintf("Migration created in %s/%s", m.Mpath.Path, filename))
+	m.Mpath.CreateNew(name, format)
 }
 
 func (m *Migrator) ApplyMigrations() {

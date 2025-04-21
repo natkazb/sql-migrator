@@ -6,24 +6,6 @@ import (
 )
 
 const (
-	template = `-- SQL
--- Up begin
--- SQL statements for applying the migration
--- Up end
-
--- Down begin
--- SQL statements for rolling back the migration
--- Down end
-`
-	templateGo = `-- GO
--- Up begin
--- GO statements
--- Up end
-
--- Down begin
--- GO statements
--- Down end
-`
 	FormatSQL     = "SQL"
 	FormatGO      = "GO"
 	FormatUnknown = "Unknown"
