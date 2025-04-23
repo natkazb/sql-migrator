@@ -35,10 +35,10 @@ jobs:
       run: golangci-lint run ./...
 
     - name: Run tests with coverage
-      run: go test -race -covermode atomic -coverprofile=covprofile ./...
+      run: go test -race -coverprofile=coverage.out -covermode=atomic
 
-    - name: Send coverage
-      run: goveralls -coverprofile=covprofile
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
 
     - name: Build
       run: go build -v ./...
