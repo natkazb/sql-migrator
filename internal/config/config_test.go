@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/natkazb/sql-migrator/internal/config" //nolint:depguard
 	"github.com/stretchr/testify/assert"
-	"github.com/natkazb/sql-migrator/internal/config"    //nolint:depguard
 )
 
 func TestNewConfig(t *testing.T) {
