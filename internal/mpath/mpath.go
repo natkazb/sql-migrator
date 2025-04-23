@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -57,7 +58,7 @@ func New(path string, l Logger) *MigrationPath {
 
 func (m *MigrationPath) CreateNew(name, format string) {
 	timestamp := time.Now().Format(formatTime)
-	filename := fmt.Sprintf("%s_%s.sql", timestamp, name)
+	filename := fmt.Sprintf("%s_%s.%s", timestamp, name, strings.ToLower(format))
 	filePath := filepath.Join(m.Path, filename)
 	file, err := os.Create(filePath)
 	if err != nil {
