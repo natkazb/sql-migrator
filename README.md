@@ -18,6 +18,11 @@ go run ./cmd/gomigrator --config=./configs/config.yaml
 go run ./cmd/gomigrator --config=./configs/config.yaml create <name>
 ```
 
+### Создать GO миграцию (CREATE-GO)
+```
+go run ./cmd/gomigrator --config=./configs/config.yaml create-go <name>
+```
+
 ### Применение всех миграций (UP)
 ```
 go run ./cmd/gomigrator --config=./configs/config.yaml up
