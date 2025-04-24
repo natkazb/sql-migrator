@@ -1,7 +1,6 @@
 #### SQL Мигратор
 ![Build Status](https://github.com/natkazb/sql-migrator/actions/workflows/go.yml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/natkazb/sql-migrator)](https://goreportcard.com/report/github.com/natkazb/sql-migrator)
-[![Coverage Status](https://coveralls.io/repos/github/natkazb/sql-migrator/badge.svg?branch=main)](https://coveralls.io/github/natkazb/sql-migrator?branch=main)
 [![codecov](https://codecov.io/gh/natkazb/sql-migrator/branch/main/graph/badge.svg)](https://codecov.io/gh/natkazb/sql-migrator)
 
 Как запускать: 
