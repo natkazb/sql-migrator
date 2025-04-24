@@ -18,8 +18,7 @@ type Logger interface {
 
 const (
 	formatTime = "20060102150405"
-	template   = `-- SQL
--- Up begin
+	template   = `-- Up begin
 -- SQL statements for applying the migration
 -- Up end
 
@@ -27,8 +26,7 @@ const (
 -- SQL statements for rolling back the migration
 -- Down end
 `
-	templateGo = `-- GO
--- Up begin
+	templateGo = `-- Up begin
 -- GO statements
 -- Up end
 
@@ -36,7 +34,7 @@ const (
 -- GO statements
 -- Down end
 `
-	FormatGO = "GO"
+	FormatGO = "go"
 )
 
 type MigrationPath struct {

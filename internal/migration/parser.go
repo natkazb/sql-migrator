@@ -2,19 +2,19 @@ package migration
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
 const (
-	FormatSQL     = "SQL"
-	FormatGO      = "GO"
+	FormatSQL     = "sql"
+	FormatGO      = "go"
 	FormatUnknown = "Unknown"
 	upStart       = "-- Up begin"
 	upEnd         = "-- Up end"
 	downStart     = "-- Down begin"
 	downEnd       = "-- Down end"
-	sqlStart      = "-- SQL"
-	goStart       = "-- GO"
 )
 
 type Migration struct {
@@ -39,22 +39,20 @@ var (
 		FormatGO: func(content string) (*Migration, error) {
 			return goParser.Parse(content)
 		},
-		FormatUnknown: func(_ string) (*Migration, error) {
-			return &Migration{
-				Format: FormatUnknown,
-			}, fmt.Errorf("unknown migration format")
-		},
 	}
 )
 
-func (p *BaseParser) Parse(content string) (*Migration, error) {
-	currFormat := FormatUnknown
-	if strings.Contains(content, sqlStart) {
-		currFormat = FormatSQL
-	} else if strings.Contains(content, goStart) {
-		currFormat = FormatGO
+func (p *BaseParser) Parse(filePath string) (*Migration, error) {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return &Migration{}, fmt.Errorf("failed to read file %s: %s", filePath, err.Error())
 	}
-	return Parsers[currFormat](content)
+	fileExt := strings.ToLower(strings.Trim(filepath.Ext(filePath), "."))
+	currParser, ok := Parsers[fileExt]
+	if ok {
+		return currParser(string(content))
+	}
+	return &Migration{Format: FormatUnknown}, fmt.Errorf("unknown migration format")
 }
 
 type SQLParser struct{}
@@ -73,7 +71,7 @@ func (p *SQLParser) Parse(content string) (*Migration, error) {
 	downSQL := strings.TrimSpace(content[downStartIdx+len("-- Down begin") : downEndIdx])
 
 	return &Migration{
-		Format: "Base",
+		Format: FormatSQL,
 		Up:     upSQL,
 		Down:   downSQL,
 	}, nil

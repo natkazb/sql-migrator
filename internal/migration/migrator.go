@@ -2,7 +2,6 @@ package migration
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"slices"
 
@@ -65,14 +64,8 @@ func (m *Migrator) ApplyMigrations() {
 		}
 
 		filePath := filepath.Join(m.Mpath.Path, file)
-		content, err := os.ReadFile(filePath)
-		if err != nil {
-			m.log.Error(fmt.Sprintf("Failed to read migration file %s: %s", file, err.Error()))
-			break
-		}
-
 		// Parse migration file
-		currMigr, err := parser.Parse(string(content))
+		currMigr, err := parser.Parse(filePath)
 		if err != nil {
 			m.log.Error(fmt.Sprintf("Failed to parse migration file %s: %s", file, err.Error()))
 			break
