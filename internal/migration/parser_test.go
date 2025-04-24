@@ -19,7 +19,7 @@ CREATE TABLE users (id SERIAL PRIMARY KEY);
 -- Down begin
 DROP TABLE users;
 -- Down end`
-		err := os.WriteFile(filePath, []byte(content), 0644)
+		err := os.WriteFile(filePath, []byte(content), 0o644)
 		assert.NoError(t, err)
 		defer os.Remove(filePath)
 
@@ -33,7 +33,7 @@ DROP TABLE users;
 	t.Run("Unknown File Format", func(t *testing.T) {
 		filePath := "test.unknown"
 		content := `-- Unknown format`
-		err := os.WriteFile(filePath, []byte(content), 0644)
+		err := os.WriteFile(filePath, []byte(content), 0o644)
 		assert.NoError(t, err)
 		defer os.Remove(filePath)
 
