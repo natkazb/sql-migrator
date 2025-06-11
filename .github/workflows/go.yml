@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
+    - name: Clone repository with code
       uses: actions/checkout@v4
 
     - name: Set up Go
